@@ -1,0 +1,24 @@
+{
+  "name": "electron-cppgraphql",
+  "version": "1.0.0",
+  "cmake-js": {
+    "runtime": "electron",
+    "runtimeVersion": "3.0.8",
+    "arch": "x64"
+  },
+  "description": "Node Native Module (built for electron) which exposes fetch and subscribe entrypoints to go with cppgraphqlgen",
+  "main": "index.js",
+  "scripts": {
+    "test": "test",
+    "install": "cmake-js compile"
+  },
+  "keywords": [
+    "test"
+  ],
+  "author": "Bill Avery",
+  "license": "MIT",
+  "dependencies": {
+    "cmake-js": "^4.0.1",
+    "nan": "^2.12.1"
+  }
+}
