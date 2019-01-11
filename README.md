@@ -23,5 +23,5 @@ of its dependencies, and `vcpkg` depends on setting `CMAKE_TOOLCHAIN_FILE` so it
 
 `npm config set cmake_CMAKE_TOOLCHAIN_FILE <vcpkg root>\vcpkg\scripts\buildsystems\vcpkg.cmake`
 
-If you're using `vcpkg` as well, just make sure you replace `<vcpkg root>` with the absolute path to your `vcpkg` installation.
+If you're using `vcpkg` as well, just make sure you replace `<vcpkg root>` with the absolute path to your `vcpkg` installation,
 and replace the `\` with `/` on Unix systems.
