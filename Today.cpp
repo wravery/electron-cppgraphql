@@ -391,18 +391,9 @@ std::future<std::shared_ptr<object::CompleteTaskPayload>> Mutation::getCompleteT
 	return promise.get_future();
 }
 
-std::stack<CapturedParams> NestedType::_capturedParams;
-
 NestedType::NestedType(service::FieldParams&& params, int depth)
 	: depth(depth)
 {
-	_capturedParams.push({
-		response::Value(params.operationDirectives),
-		response::Value(params.fragmentDefinitionDirectives),
-		response::Value(params.fragmentSpreadDirectives),
-		response::Value(params.inlineFragmentDirectives),
-		std::move(params.fieldDirectives)
-		});
 }
 
 std::future<response::IntType> NestedType::getDepth(service::FieldParams&& params) const
@@ -421,13 +412,6 @@ std::future<std::shared_ptr<object::NestedType>> NestedType::getNested(service::
 	promise.set_value(std::make_shared<NestedType>(std::move(params), depth + 1));
 
 	return promise.get_future();
-}
-
-std::stack<CapturedParams> NestedType::getCapturedParams()
-{
-	auto result = std::move(_capturedParams);
-
-	return result;
 }
 
 } /* namespace today */

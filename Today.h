@@ -512,18 +512,6 @@ private:
 	nextAppointmentChange _changeNextAppointment;
 };
 
-struct CapturedParams
-{
-	// Copied in the constructor
-	const response::Value operationDirectives;
-	const response::Value fragmentDefinitionDirectives;
-	const response::Value fragmentSpreadDirectives;
-	const response::Value inlineFragmentDirectives;
-
-	// Moved in the constructor
-	const response::Value fieldDirectives;
-};
-
 class NestedType : public object::NestedType
 {
 public:
@@ -532,11 +520,7 @@ public:
 	std::future<response::IntType> getDepth(service::FieldParams&& params) const override;
 	std::future<std::shared_ptr<object::NestedType>> getNested(service::FieldParams&& params) const override;
 
-	static std::stack<CapturedParams> getCapturedParams();
-
 private:
-	static std::stack<CapturedParams> _capturedParams;
-
 	// Initialized in the constructor
 	const int depth;
 };

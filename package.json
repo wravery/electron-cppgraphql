@@ -10,7 +10,7 @@
   "main": "index.js",
   "scripts": {
     "test": "test",
-    "install": "cmake-js compile"
+    "install": "cmake-js compile -D"
   },
   "keywords": [
     "test"

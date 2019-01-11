@@ -73,7 +73,6 @@ NAN_METHOD(StartService)
 
 NAN_METHOD(StopService)
 {
-    auto cleanupCapturedParams = today::NestedType::getCapturedParams();
     serviceSingleton.reset();
 }
 
