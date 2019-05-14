@@ -21,16 +21,16 @@ using Nan::Null;
 using Nan::Set;
 using Nan::To;
 
-using namespace facebook::graphql;
+using namespace graphql;
 
 NAN_METHOD(HelloMethod)
 {
     info.GetReturnValue().Set(New<String>("Native World").ToLocalChecked());
 }
 
-static std::vector<uint8_t> binAppointmentId;
-static std::vector<uint8_t> binTaskId;
-static std::vector<uint8_t> binFolderId;
+static response::IdType binAppointmentId;
+static response::IdType binTaskId;
+static response::IdType binFolderId;
 static std::shared_ptr<today::Operations> serviceSingleton;
 
 NAN_METHOD(StartService)
@@ -85,7 +85,7 @@ public:
     {
         try
         {
-            _ast_input = peg::parseString(std::move(query));
+            _ast = peg::parseString(query);
             _variables = (variables.empty() ? response::Value(response::Type::Map) : response::parseJSON(variables));
 
             if (_variables.type() != response::Type::Map)
@@ -125,7 +125,7 @@ public:
                 throw std::runtime_error("The service is not started!");
             }
 
-            _response = response::toJSON(serviceSingleton->resolve(nullptr, *_ast_input->root.get(), _operationName, std::move(_variables)).get());
+            _response = response::toJSON(serviceSingleton->resolve(nullptr, *_ast.root, _operationName, std::move(_variables)).get());
         }
         catch (const std::exception& ex)
         {
@@ -168,7 +168,7 @@ public:
     }
 
 private:
-    std::unique_ptr<peg::ast<std::string>> _ast_input;
+    peg::ast _ast;
     std::string _operationName;
     response::Value _variables;
     std::string _response;

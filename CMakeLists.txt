@@ -2,12 +2,15 @@ cmake_minimum_required(VERSION 2.8)
 
 project(electron-cppgraphql)
 
+set(CMAKE_CXX_STANDARD 17)
+
 if(WIN32)
   # Let CMake figure out the exports for the SHARED library (DLL) on Windows.
   set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 endif()
 
-find_package(cppgraphqlgen CONFIG REQUIRED)
+find_package(pegtl 3.0.0 CONFIG REQUIRED)
+find_package(cppgraphqlgen 3.0.0 CONFIG REQUIRED)
 
 add_custom_command(
   OUTPUT
