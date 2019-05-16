@@ -1,11 +1,11 @@
 # electron-cppgraphql
+
 This is a sample Node Native Module (for Electron) which exposes a [cppgraphqlgen](https://github.com/Microsoft/cppgraphqlgen) service as
 a GraphQL endpoint. You could change some of the target configuration to work with regular Node as well, but I used this
 with an Electron app hosting [GraphiQL](https://github.com/graphql/graphiql), so that's how it's configured out of the box.
 
-The relevant bits are all in [NodeBinding.cpp](NodeBinding.cpp). I used a locally patched version of the
-[vcpkg](https://github.com/Microsoft/vcpkg) package manager to install cppgraphqlgen v1.0.0 and all of its dependencies, the
-[PR](https://github.com/Microsoft/vcpkg/pull/5017) to bump that package up to v1.0.0 hasn't been accepted yet as of writing this.
+The relevant bits are all in [NodeBinding.cpp](NodeBinding.cpp). I used the
+[vcpkg](https://github.com/Microsoft/vcpkg) package manager to install cppgraphqlgen v3.0.0 and all of its dependencies.
 I used [cmake-js](https://github.com/cmake-js/cmake-js) to integrate with vcpkg and CMake (instead of the standard GYP-based process),
 and I used the [NAN](https://github.com/nodejs/nan) project to make it somewhat resilient to different versions of Node or Electron.
 
