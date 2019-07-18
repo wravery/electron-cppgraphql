@@ -18,7 +18,7 @@
   "author": "Bill Avery",
   "license": "MIT",
   "dependencies": {
-    "cmake-js": "^4.0.1",
+    "cmake-js": "^5.3.0",
     "nan": "^2.12.1"
   }
 }
