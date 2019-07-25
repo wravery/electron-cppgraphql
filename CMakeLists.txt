@@ -23,7 +23,8 @@ add_custom_command(
 
 execute_process(COMMAND node -e "require('nan')"
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  OUTPUT_VARIABLE NAN_INCLUDE)
+  OUTPUT_VARIABLE NAN_INCLUDE
+  OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 add_library(${PROJECT_NAME} SHARED
   NodeBinding.cpp
