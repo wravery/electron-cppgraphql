@@ -2,7 +2,7 @@
 #include <iostream>
 #include <graphqlservice/JSONResponse.h>
 
-#include "Today.h"
+#include "TodayMock.h"
 
 using v8::Function;
 using v8::FunctionTemplate;
@@ -22,11 +22,6 @@ using Nan::Set;
 using Nan::To;
 
 using namespace graphql;
-
-NAN_METHOD(HelloMethod)
-{
-    info.GetReturnValue().Set(New<String>("Native World").ToLocalChecked());
-}
 
 static response::IdType binAppointmentId;
 static response::IdType binTaskId;
@@ -125,7 +120,7 @@ public:
                 throw std::runtime_error("The service is not started!");
             }
 
-            _response = response::toJSON(serviceSingleton->resolve(nullptr, *_ast.root, _operationName, std::move(_variables)).get());
+            _response = response::toJSON(serviceSingleton->resolve(nullptr, _ast, _operationName, std::move(_variables)).get());
         }
         catch (const std::exception& ex)
         {
@@ -184,9 +179,6 @@ NAN_METHOD(FetchQuery) {
 }
 
 NAN_MODULE_INIT(Init) {
-    Set(target, New<String>("nativeHello").ToLocalChecked(),
-        GetFunction(New<FunctionTemplate>(HelloMethod)).ToLocalChecked());
-
     Set(target, New<String>("startService").ToLocalChecked(),
         GetFunction(New<FunctionTemplate>(StartService)).ToLocalChecked());
 

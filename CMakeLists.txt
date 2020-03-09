@@ -28,7 +28,7 @@ execute_process(COMMAND node -e "require('nan')"
 
 add_library(${PROJECT_NAME} SHARED
   NodeBinding.cpp
-  Today.cpp
+  TodayMock.cpp
   TodaySchema.cpp)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "" SUFFIX ".node")

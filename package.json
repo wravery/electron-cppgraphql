@@ -3,14 +3,15 @@
   "version": "1.0.0",
   "cmake-js": {
     "runtime": "electron",
-    "runtimeVersion": "3.0.8",
+    "runtimeVersion": "8.1.0",
     "arch": "x64"
   },
   "description": "Node Native Module (built for electron) which exposes fetch and subscribe entrypoints to go with cppgraphqlgen",
   "main": "index.js",
   "scripts": {
     "test": "test",
-    "install": "cmake-js compile -D"
+    "install": "cmake-js compile -D",
+    "release": "cmake-js compile"
   },
   "keywords": [
     "test"
@@ -18,7 +19,7 @@
   "author": "Bill Avery",
   "license": "MIT",
   "dependencies": {
-    "cmake-js": "^5.3.0",
-    "nan": "^2.12.1"
+    "cmake-js": "^6.1.0",
+    "nan": "^2.14.0"
   }
 }
