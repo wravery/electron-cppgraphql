@@ -29,7 +29,8 @@ execute_process(COMMAND node -e "require('nan')"
 add_library(${PROJECT_NAME} SHARED
   NodeBinding.cpp
   TodayMock.cpp
-  TodaySchema.cpp)
+  TodaySchema.cpp
+  ${CMAKE_JS_SRC})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES PREFIX "" SUFFIX ".node")
 target_compile_definitions(${PROJECT_NAME} PRIVATE PROJECT_NAME=${PROJECT_NAME})

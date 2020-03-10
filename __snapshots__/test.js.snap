@@ -1,0 +1,161 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`GraphQL native module tests fetches introspection 1`] = `
+Object {
+  "data": Object {
+    "__schema": Object {
+      "mutationType": Object {
+        "name": "Mutation",
+      },
+      "queryType": Object {
+        "name": "Query",
+      },
+      "subscriptionType": Object {
+        "name": "Subscription",
+      },
+      "types": Array [
+        Object {
+          "kind": "SCALAR",
+          "name": "Boolean",
+        },
+        Object {
+          "kind": "SCALAR",
+          "name": "Float",
+        },
+        Object {
+          "kind": "SCALAR",
+          "name": "ID",
+        },
+        Object {
+          "kind": "SCALAR",
+          "name": "Int",
+        },
+        Object {
+          "kind": "SCALAR",
+          "name": "String",
+        },
+        Object {
+          "kind": "ENUM",
+          "name": "__TypeKind",
+        },
+        Object {
+          "kind": "ENUM",
+          "name": "__DirectiveLocation",
+        },
+        Object {
+          "kind": "OBJECT",
+          "name": "__Schema",
+        },
+        Object {
+          "kind": "OBJECT",
+          "name": "__Type",
+        },
+        Object {
+          "kind": "OBJECT",
+          "name": "__Field",
+        },
+        Object {
+          "kind": "OBJECT",
+          "name": "__InputValue",
+        },
+        Object {
+          "kind": "OBJECT",
+          "name": "__EnumValue",
+        },
+        Object {
+          "kind": "OBJECT",
+          "name": "__Directive",
+        },
+        Object {
+          "kind": "SCALAR",
+          "name": "ItemCursor",
+        },
+        Object {
+          "kind": "SCALAR",
+          "name": "DateTime",
+        },
+        Object {
+          "kind": "ENUM",
+          "name": "TaskState",
+        },
+        Object {
+          "kind": "INPUT_OBJECT",
+          "name": "CompleteTaskInput",
+        },
+        Object {
+          "kind": "UNION",
+          "name": "UnionType",
+        },
+        Object {
+          "kind": "INTERFACE",
+          "name": "Node",
+        },
+        Object {
+          "kind": "OBJECT",
+          "name": "Query",
+        },
+        Object {
+          "kind": "OBJECT",
+          "name": "PageInfo",
+        },
+        Object {
+          "kind": "OBJECT",
+          "name": "AppointmentEdge",
+        },
+        Object {
+          "kind": "OBJECT",
+          "name": "AppointmentConnection",
+        },
+        Object {
+          "kind": "OBJECT",
+          "name": "TaskEdge",
+        },
+        Object {
+          "kind": "OBJECT",
+          "name": "TaskConnection",
+        },
+        Object {
+          "kind": "OBJECT",
+          "name": "FolderEdge",
+        },
+        Object {
+          "kind": "OBJECT",
+          "name": "FolderConnection",
+        },
+        Object {
+          "kind": "OBJECT",
+          "name": "CompleteTaskPayload",
+        },
+        Object {
+          "kind": "OBJECT",
+          "name": "Mutation",
+        },
+        Object {
+          "kind": "OBJECT",
+          "name": "Subscription",
+        },
+        Object {
+          "kind": "OBJECT",
+          "name": "Appointment",
+        },
+        Object {
+          "kind": "OBJECT",
+          "name": "Task",
+        },
+        Object {
+          "kind": "OBJECT",
+          "name": "Folder",
+        },
+        Object {
+          "kind": "OBJECT",
+          "name": "NestedType",
+        },
+        Object {
+          "kind": "OBJECT",
+          "name": "Expensive",
+        },
+      ],
+    },
+  },
+}
+`;
