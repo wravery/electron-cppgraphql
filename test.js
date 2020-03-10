@@ -1,5 +1,5 @@
 describe('GraphQL native module tests', () => {
-    const graphql = require('./build/Debug/electron_cppgraphql');
+    const graphql = require('./build/Debug/electron-cppgraphql');
 
     it('starts the service', () => {
         console.log('starts the service');
