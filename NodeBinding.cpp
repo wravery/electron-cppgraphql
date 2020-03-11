@@ -12,6 +12,7 @@
 
 using v8::Function;
 using v8::FunctionTemplate;
+using v8::Promise;
 using v8::Local;
 using v8::String;
 using v8::Int32;
@@ -139,18 +140,70 @@ NAN_METHOD(StartService)
     serviceSingleton = std::make_shared<today::Operations>(query, mutation, mockSubscription);
 }
 
+struct SubscriptionPayloadQueue : std::enable_shared_from_this<SubscriptionPayloadQueue>
+{
+    ~SubscriptionPayloadQueue()
+    {
+        Unsubscribe();
+    }
+
+    void Unsubscribe()
+    {
+        std::optional<service::SubscriptionKey> deferUnsubscribe;
+        std::unique_lock<std::mutex> lock(mutex);
+
+        if (!registered)
+        {
+            return;
+        }
+
+        registered = false;
+        deferUnsubscribe = std::make_optional(key);
+        key = {};
+
+        lock.unlock();
+        condition.notify_one();
+
+        if (deferUnsubscribe
+            && serviceSingleton)
+        {
+            serviceSingleton->unsubscribe(*deferUnsubscribe);
+        }
+    }
+
+    std::mutex mutex;
+    std::condition_variable condition;
+    std::queue<std::future<response::Value>> payloads;
+    service::SubscriptionKey key {};
+    bool registered = false;
+};
+
+static std::map<int32_t, std::shared_ptr<SubscriptionPayloadQueue>> subscriptionMap;
+
 NAN_METHOD(StopService)
 {
-    serviceSingleton.reset();
+    if (serviceSingleton)
+    {
+        for (const auto& entry : subscriptionMap)
+        {
+            entry.second->Unsubscribe();
+        }
+
+        serviceSingleton.reset();
+    }
 }
+
+constexpr uint32_t c_resolverIndex = 1;
 
 class FetchWorker : public AsyncWorker
 {
 public:
-    explicit FetchWorker(Callback* callback, std::string&& query, std::string&& operationName, const std::string& variables)
-        : AsyncWorker(callback, "graphql:fetchQuery")
+    explicit FetchWorker(std::string&& query, std::string&& operationName, const std::string& variables, const v8::Local<v8::Promise::Resolver>& resolver)
+        : AsyncWorker(nullptr, "graphql:fetchQuery")
         , _operationName(std::move(operationName))
     {
+        SaveToPersistent(c_resolverIndex, resolver);
+
         try
         {
             _ast = peg::parseString(query);
@@ -218,25 +271,17 @@ public:
     void HandleOKCallback() override
     {
         HandleScope scope;
-        
-        Local<Value> argv[] = {
-            Null(),
-            New<String>(_response.c_str()).ToLocalChecked()
-        };
+        auto resolver = GetFromPersistent(c_resolverIndex).As<v8::Promise::Resolver>();
 
-        callback->Call(2, argv, async_resource);
+        resolver->Resolve(Nan::GetCurrentContext(), New<String>(_response.c_str()).ToLocalChecked());
     }
 
     void HandleErrorCallback() override
     {
         HandleScope scope;
-        
-        Local<Value> argv[] = {
-            New<String>(ErrorMessage()).ToLocalChecked(),
-            Null()
-        };
+        auto resolver = GetFromPersistent(c_resolverIndex).As<v8::Promise::Resolver>();
 
-        callback->Call(2, argv, async_resource);
+        resolver->Reject(Nan::GetCurrentContext(), New<String>(ErrorMessage()).ToLocalChecked());
     }
 
 private:
@@ -250,9 +295,11 @@ NAN_METHOD(FetchQuery) {
     std::string query(*Nan::Utf8String(To<String>(info[0]).ToLocalChecked()));
     std::string operationName(*Nan::Utf8String(To<String>(info[1]).ToLocalChecked()));
     std::string variables(*Nan::Utf8String(To<String>(info[2]).ToLocalChecked()));
-    Callback* callback = new Callback(To<Function>(info[3]).ToLocalChecked());
+    auto resolver = v8::Promise::Resolver::New(info.GetIsolate()->GetCurrentContext()).ToLocalChecked();
 
-    AsyncQueueWorker(new FetchWorker(callback, std::move(query), std::move(operationName), variables));
+    AsyncQueueWorker(new FetchWorker(std::move(query), std::move(operationName), variables, resolver));
+
+    info.GetReturnValue().Set(resolver->GetPromise());
 }
 
 class RegisteredSubscription : public AsyncProgressWorkerBase<std::string>
@@ -271,25 +318,23 @@ public:
                 throw std::runtime_error("Invalid variables object");
             }
 
-            _payloadQueue = std::make_shared<PayloadQueue>();
+            _payloadQueue = std::make_shared<SubscriptionPayloadQueue>();
 
-            std::weak_ptr<PayloadQueue> wpQueue { _payloadQueue };
+            std::weak_ptr<SubscriptionPayloadQueue> wpQueue { _payloadQueue };
 
             _key = serviceSingleton->subscribe(service::SubscriptionParams {
                 nullptr,
                 std::move(ast),
                 std::move(operationName),
                 std::move(parsedVariables)
-            }, [wpQueue](std::future<response::Value> payload) noexcept -> void
+            }, [spQueue = _payloadQueue](std::future<response::Value> payload) noexcept -> void
             {
-                auto spQueue = wpQueue.lock();
+                std::unique_lock<std::mutex> lock(spQueue->mutex);
 
-                if (!spQueue)
+                if (!spQueue->registered)
                 {
                     return;
                 }
-
-                std::unique_lock<std::mutex> lock(spQueue->mutex);
 
                 spQueue->payloads.push(std::move(payload));
 
@@ -307,33 +352,15 @@ public:
 
     ~RegisteredSubscription()
     {
-        auto spQueue = std::move(_payloadQueue);
-
-        if (spQueue)
+        if (_payloadQueue)
         {
-            std::unique_lock<std::mutex> lock(spQueue->mutex);
-
-            if (spQueue->registered)
-            {
-                const auto key = _key;
-
-                spQueue->registered = false;
-                _key = {};
-
-                if (serviceSingleton)
-                {
-                    serviceSingleton->unsubscribe(_key);
-                }
-            }
-
-            lock.unlock();
-            spQueue->condition.notify_one();
+            _payloadQueue->Unsubscribe();
         }
     }
 
-    service::SubscriptionKey GetKey() const
+    const std::shared_ptr<SubscriptionPayloadQueue>& GetPayloadQueue() const
     {
-        return _key;
+        return _payloadQueue;
     }
 
     // Executed inside the worker-thread.
@@ -381,34 +408,33 @@ public:
         }
     }
 
-    // Executed when the async work is complete
+    // Executed when the async results are ready
     // this function will be run inside the main event loop
     // so it is safe to use V8 again
     void HandleProgressCallback(const std::string* data, size_t size) override
     {
-        HandleScope scope;
-        
-        Local<Value> argv[] = {
-            New<String>(data->c_str(), static_cast<int>(data->size())).ToLocalChecked()
-        };
+        if (data == nullptr)
+        {
+            return;
+        }
 
-        callback->Call(1, argv, async_resource);
+        HandleScope scope;
+
+        while (size-- > 0)
+        {
+            Local<Value> argv[] = {
+                New<String>(data->c_str(), static_cast<int>(data->size())).ToLocalChecked()
+            };
+
+            callback->Call(1, argv, async_resource);
+            ++data;
+        }
     }
 
 private:
-    struct PayloadQueue : std::enable_shared_from_this<PayloadQueue>
-    {
-        std::mutex mutex;
-        std::condition_variable condition;
-        std::queue<std::future<response::Value>> payloads;
-        bool registered = false;
-    };
-
-    std::shared_ptr<PayloadQueue> _payloadQueue;
+    std::shared_ptr<SubscriptionPayloadQueue> _payloadQueue;
     service::SubscriptionKey _key {};
 };
-
-std::map<int32_t, service::SubscriptionKey> subscriptionMap;
 
 NAN_METHOD(Subscribe) {
     std::string query(*Nan::Utf8String(To<String>(info[0]).ToLocalChecked()));
@@ -419,7 +445,7 @@ NAN_METHOD(Subscribe) {
     auto subscription = std::make_unique<RegisteredSubscription>(std::move(query), std::move(operationName), variables, callback.get());
 
     callback.release();
-    subscriptionMap[index] = subscription->GetKey();
+    subscriptionMap[index] = subscription->GetPayloadQueue();
     AsyncQueueWorker(subscription.release());
 
     info.GetReturnValue().Set(index);
@@ -431,7 +457,7 @@ NAN_METHOD(Unsubscribe) {
 
     if (itr != subscriptionMap.end())
     {
-        serviceSingleton->unsubscribe(itr->second);
+        itr->second->Unsubscribe();
         subscriptionMap.erase(itr);
     }
 }

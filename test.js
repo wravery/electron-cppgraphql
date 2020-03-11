@@ -8,8 +8,7 @@ describe('GraphQL native module tests', () => {
     });
 
     it('fetches introspection', async () =>
-        await expect(new Promise((resolve, reject) => {
-            graphql.fetchQuery(`query {
+        await expect(graphql.fetchQuery(`query {
                 __schema {
                     queryType {
                         name
@@ -25,18 +24,9 @@ describe('GraphQL native module tests', () => {
                         name
                     }
                 }
-            }`, '', '', (error, response) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    try {
-                        resolve(JSON.parse(response));
-                    } catch (error) {
-                        resolve(response);
-                    }
-                }
-            });
-        })).resolves.toMatchSnapshot()
+            }`, '', '')
+            .then(result => JSON.parse(result)))
+            .resolves.toMatchSnapshot()
     );
 
     it('updates subscriptions', async () => {
@@ -60,8 +50,7 @@ describe('GraphQL native module tests', () => {
             });
         });
 
-        await expect(new Promise((resolve, reject) => {
-            graphql.fetchQuery(`mutation {
+        await expect(graphql.fetchQuery(`mutation {
                 changeNode(id: "ZmFrZUFwcG9pbnRtZW50SWQ=") {
                     id
                     ...on Appointment {
@@ -69,18 +58,9 @@ describe('GraphQL native module tests', () => {
                         when
                     }
                 }
-            }`, '', '', (error, response) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    try {
-                        resolve(JSON.parse(response));
-                    } catch (error) {
-                        resolve(response);
-                    }
-                }
-            });
-        })).resolves.toMatchSnapshot();
+            }`, '', '')
+            .then(result => JSON.parse(result)))
+            .resolves.toMatchSnapshot();
         await expect(subscriptionPromise).resolves.toMatchSnapshot();
         expect(key).toBe(1);
 
