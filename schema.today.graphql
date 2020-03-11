@@ -1,12 +1,6 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-schema {
-    query: Query
-    mutation: Mutation
-    subscription: Subscription
-}
-
 scalar ItemCursor
 
 "Root Query type"
@@ -85,6 +79,7 @@ type CompleteTaskPayload {
 
 type Mutation {
     completeTask(input: CompleteTaskInput!) : CompleteTaskPayload!
+    changeNode(id: ID!): Node
 }
 
 type Subscription {
