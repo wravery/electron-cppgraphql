@@ -189,6 +189,7 @@ NAN_METHOD(StopService)
             entry.second->Unsubscribe();
         }
 
+        subscriptionMap.clear();
         serviceSingleton.reset();
     }
 }
