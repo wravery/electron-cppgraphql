@@ -32,20 +32,21 @@ using Nan::To;
 
 using namespace graphql;
 
-static response::IdType binAppointmentId;
-static response::IdType binTaskId;
-static response::IdType binFolderId;
-static std::shared_ptr<today::Operations> serviceSingleton;
+static std::shared_ptr<today::Appointment> appointment;
+static std::shared_ptr<today::Task> task;
+static std::shared_ptr<today::Folder> folder;
 
 static std::map<response::IdType, std::shared_ptr<service::Object>> nodes;
+
+static std::shared_ptr<today::Operations> serviceSingleton;
 
 void loadAppointments()
 {
 	std::string fakeAppointmentId("fakeAppointmentId");
-	binAppointmentId.resize(fakeAppointmentId.size());
+    response::IdType binAppointmentId(fakeAppointmentId.size());
 	std::copy(fakeAppointmentId.cbegin(), fakeAppointmentId.cend(), binAppointmentId.begin());
 
-    auto appointment = std::make_shared<today::Appointment>(std::move(binAppointmentId), "tomorrow", "Lunch?", false);
+    appointment = std::make_shared<today::Appointment>(std::move(binAppointmentId), "tomorrow", "Lunch?", false);
 
     nodes[appointment->id()] = appointment;
 };
@@ -53,10 +54,10 @@ void loadAppointments()
 void loadTasks()
 {
 	std::string fakeTaskId("fakeTaskId");
-	binTaskId.resize(fakeTaskId.size());
+	response::IdType binTaskId(fakeTaskId.size());
 	std::copy(fakeTaskId.cbegin(), fakeTaskId.cend(), binTaskId.begin());
 
-    auto task = std::make_shared<today::Task>(std::move(binTaskId), "Don't forget", true);
+    task = std::make_shared<today::Task>(std::move(binTaskId), "Don't forget", true);
 
     nodes[task->id()] = task;
 }
@@ -64,10 +65,10 @@ void loadTasks()
 void loadUnreadCounts()
 {
 	std::string fakeFolderId("fakeFolderId");
-	binFolderId.resize(fakeFolderId.size());
+	response::IdType binFolderId(fakeFolderId.size());
 	std::copy(fakeFolderId.cbegin(), fakeFolderId.cend(), binFolderId.begin());
 
-    auto folder = std::make_shared<today::Folder>(std::move(binFolderId), "\"Fake\" Inbox", 3);
+    folder = std::make_shared<today::Folder>(std::move(binFolderId), "\"Fake\" Inbox", 3);
 
     nodes[folder->id()] = folder;
 }
@@ -125,14 +126,15 @@ NAN_METHOD(StartService)
     loadTasks();
     loadUnreadCounts();
 
-	auto query = std::make_shared<today::Query>([]() -> std::vector<std::shared_ptr<today::Appointment>>
+	auto query = std::make_shared<today::Query>(
+        []() -> std::vector<std::shared_ptr<today::Appointment>>
     {
-        return { std::static_pointer_cast<today::Appointment>(nodes[binAppointmentId]) };
+        return { appointment };
     }, []() -> std::vector<std::shared_ptr<today::Task>>{
-        return { std::static_pointer_cast<today::Task>(nodes[binTaskId]) };
+        return { task };
     }, []() -> std::vector<std::shared_ptr<today::Folder>>
     {
-        return { std::static_pointer_cast<today::Folder>(nodes[binFolderId]) };
+        return { folder };
     });
 	auto mutation = std::make_shared<MockMutation>();
 	mockSubscription = std::make_shared<MockSubscription>();
