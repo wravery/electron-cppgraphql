@@ -25,6 +25,7 @@
   "devDependencies": {
     "@jest-runner/electron": "^2.0.3",
     "electron": "^8.1.0",
-    "jest": "^25.1.0"
+    "jest": "^25.1.0",
+    "minimist": "^1.2.5"
   }
 }
