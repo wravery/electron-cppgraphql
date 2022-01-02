@@ -37,7 +37,4 @@ jobs:
       run: npm install
 
     - name: Test
-      shell: pwsh
-      run: |
-        $env:USE_DEBUG_MODULE = 1
-        npm test
+      run: npm test
