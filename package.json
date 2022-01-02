@@ -1,12 +1,12 @@
 {
   "name": "electron-cppgraphql",
   "license": "MIT",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "description": "Node Native Module (built for electron) which exposes fetch and subscribe entrypoints to go with cppgraphqlgen",
   "keywords": [
     "test"
   ],
-  "main": "index.js",
+  "main": "lib/index.js",
   "scripts": {
     "debug": "cmake-js build -D && cross-env USE_DEBUG_MODULE=1 node --inspect-brk ./node_modules/jest/bin/jest.js --runInBand",
     "prepare": "cmake-js build",
