@@ -1,16 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-"Test Schema based on a dashboard showing daily appointments, tasks, and email folders with unread counts."
-schema {
-    query: Query
-    mutation: Mutation
-    subscription: Subscription
-}
-
 scalar ItemCursor
-
-directive @id on FIELD_DEFINITION
 
 "Root Query type"
 type Query {
@@ -33,10 +24,6 @@ type Query {
     unimplemented: String!
 
     expensive: [Expensive!]!
-
-    testTaskState: TaskState!
-
-    anyType(ids: [ID!]!): [UnionType]!
 }
 
 "Node interface for Relay support"
@@ -81,7 +68,6 @@ type FolderConnection {
 
 input CompleteTaskInput {
     id: ID!
-    testTaskState: TaskState
     isComplete: Boolean = true
     clientMutationId: String
 }
@@ -93,32 +79,26 @@ type CompleteTaskPayload {
 
 type Mutation {
     completeTask(input: CompleteTaskInput!) : CompleteTaskPayload!
-    setFloat(value: Float!): Float!
+    changeNode(id: ID!): Node
 }
 
-    """
-
-        Subscription type:
-        
-        2nd line...
-            3rd line goes here!
-                
-    """
 type Subscription {
     nextAppointmentChange : Appointment @deprecated(
-        reason:"""Need to deprecate a [field](https://spec.graphql.org/October2021/#sec-Schema-Introspection.Deprecation)"""
+        reason:"""Need to deprecate a [field](https://facebook.github.io/graphql/June2018/#sec-Deprecation)"""
     )
     nodeChange(id: ID!): Node!
 }
 
-scalar DateTime @specifiedBy(url: "https://en.wikipedia.org/wiki/ISO_8601")
+directive @subscriptionTag(field: String) on SUBSCRIPTION
+
+scalar DateTime
 
 enum TaskState {
     New
     Started
     Complete
     Unassigned @deprecated(
-        reason:"""Need to deprecate an [enum value](https://spec.graphql.org/October2021/#sec-Schema-Introspection.Deprecation)"""
+        reason:"""Need to deprecate an [enum value](https://facebook.github.io/graphql/June2018/#sec-Deprecation)"""
     )
 }
 
@@ -127,7 +107,6 @@ type Appointment implements Node {
     when: DateTime
     subject: String
     isNow: Boolean!
-    forceError: String
 }
 
 type Task implements Node {
@@ -149,7 +128,6 @@ directive @fieldTag(field: String!) on FIELD
 directive @fragmentDefinitionTag(fragmentDefinition: String!) on FRAGMENT_DEFINITION
 directive @fragmentSpreadTag(fragmentSpread: String!) on FRAGMENT_SPREAD
 directive @inlineFragmentTag(inlineFragment: String!) on INLINE_FRAGMENT
-directive @repeatableOnField repeatable on FIELD
 
 "Infinitely nestable type which can be used with nested fragments to test directive handling"
 type NestedType {
@@ -161,23 +139,4 @@ type NestedType {
 
 type Expensive {
     order: Int!
-}
-
-input FirstNestedInput {
-    id: ID!
-    second: SecondNestedInput!
-    third: ThirdNestedInput!
-}
-
-input SecondNestedInput {
-    id: ID!
-    third: ThirdNestedInput!
-}
-
-input ThirdNestedInput {
-    id: ID!
-}
-
-input FourthNestedInput {
-    id: ID!
 }

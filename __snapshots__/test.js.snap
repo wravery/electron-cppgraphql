@@ -1,5 +1,20 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`GraphQL native module tests applies mutation 1`] = `
+Object {
+  "data": Object {
+    "completedTask": Object {
+      "clientMutationId": "Hi There!",
+      "completedTask": Object {
+        "completedTaskId": "ZmFrZVRhc2tJZA==",
+        "isComplete": true,
+        "title": "Don't forget",
+      },
+    },
+  },
+}
+`;
+
 exports[`GraphQL native module tests fetches introspection 1`] = `
 Object {
   "data": Object {
@@ -83,12 +98,28 @@ Object {
           "name": "CompleteTaskInput",
         },
         Object {
-          "kind": "UNION",
-          "name": "UnionType",
+          "kind": "INPUT_OBJECT",
+          "name": "ThirdNestedInput",
+        },
+        Object {
+          "kind": "INPUT_OBJECT",
+          "name": "FourthNestedInput",
+        },
+        Object {
+          "kind": "INPUT_OBJECT",
+          "name": "SecondNestedInput",
+        },
+        Object {
+          "kind": "INPUT_OBJECT",
+          "name": "FirstNestedInput",
         },
         Object {
           "kind": "INTERFACE",
           "name": "Node",
+        },
+        Object {
+          "kind": "UNION",
+          "name": "UnionType",
         },
         Object {
           "kind": "OBJECT",
@@ -163,22 +194,9 @@ Object {
 exports[`GraphQL native module tests updates subscriptions 1`] = `
 Object {
   "data": Object {
-    "changeNode": Object {
-      "id": "ZmFrZUFwcG9pbnRtZW50SWQ=",
-      "subject": "Lunch?",
-      "when": "tomorrow",
-    },
-  },
-}
-`;
-
-exports[`GraphQL native module tests updates subscriptions 2`] = `
-Object {
-  "data": Object {
     "nodeChange": Object {
-      "id": "ZmFrZUFwcG9pbnRtZW50SWQ=",
-      "subject": "Lunch?",
-      "when": "tomorrow",
+      "id": "ZmFrZVRhc2tJZA==",
+      "title": "Don't forget",
     },
   },
 }

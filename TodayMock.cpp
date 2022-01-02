@@ -3,66 +3,77 @@
 
 #include "TodayMock.h"
 
-#include <iostream>
+#include "AppointmentConnectionObject.h"
+#include "CompleteTaskPayloadObject.h"
+#include "ExpensiveObject.h"
+#include "FolderConnectionObject.h"
+#include "NestedTypeObject.h"
+#include "TaskConnectionObject.h"
+#include "UnionTypeObject.h"
+
 #include <algorithm>
+#include <chrono>
+#include <future>
+#include <iostream>
 
 namespace graphql::today {
 
-Appointment::Appointment(response::IdType&& id, std::string&& when, std::string&& subject, bool isNow)
+Appointment::Appointment(
+	response::IdType&& id, std::string&& when, std::string&& subject, bool isNow)
 	: _id(std::move(id))
-	, _when(std::move(when))
-	, _subject(std::move(subject))
+	, _when(std::make_shared<response::Value>(std::move(when)))
+	, _subject(std::make_shared<response::Value>(std::move(subject)))
 	, _isNow(isNow)
 {
 }
 
 Task::Task(response::IdType&& id, std::string&& title, bool isComplete)
 	: _id(std::move(id))
-	, _title(std::move(title))
+	, _title(std::make_shared<response::Value>(std::move(title)))
 	, _isComplete(isComplete)
 {
 }
 
 Folder::Folder(response::IdType&& id, std::string&& name, int unreadCount)
 	: _id(std::move(id))
-	, _name(std::move(name))
+	, _name(std::make_shared<response::Value>(std::move(name)))
 	, _unreadCount(unreadCount)
 {
 }
 
-Query::Query(appointmentsLoader&& getAppointments, tasksLoader&& getTasks, unreadCountsLoader&& getUnreadCounts)
+Query::Query(appointmentsLoader&& getAppointments, tasksLoader&& getTasks,
+	unreadCountsLoader&& getUnreadCounts)
 	: _getAppointments(std::move(getAppointments))
 	, _getTasks(std::move(getTasks))
 	, _getUnreadCounts(getUnreadCounts)
 {
 }
 
-void Query::loadAppointments(const std::shared_ptr<service::RequestState>& state) const
+void Query::loadAppointments(const std::shared_ptr<service::RequestState>& state)
 {
-	if (state)
-	{
-		auto todayState = std::static_pointer_cast<RequestState>(state);
-
-		todayState->appointmentsRequestId = todayState->requestId;
-		todayState->loadAppointmentsCount++;
-	}
-
 	if (_getAppointments)
 	{
+		if (state)
+		{
+			auto todayState = std::static_pointer_cast<RequestState>(state);
+
+			todayState->appointmentsRequestId = todayState->requestId;
+			todayState->loadAppointmentsCount++;
+		}
+
 		_appointments = _getAppointments();
 		_getAppointments = nullptr;
 	}
 }
 
-std::shared_ptr<Appointment> Query::findAppointment(const service::FieldParams& params, const response::IdType& id) const
+std::shared_ptr<Appointment> Query::findAppointment(
+	const service::FieldParams& params, const response::IdType& id)
 {
 	loadAppointments(params.state);
 
 	for (const auto& appointment : _appointments)
 	{
-		auto appointmentId = appointment->getId(service::FieldParams(params, response::Value(response::Type::Map))).get();
-
-		if (appointmentId == id)
+		if (appointment->id() == id)
 		{
 			return appointment;
 		}
@@ -71,32 +82,31 @@ std::shared_ptr<Appointment> Query::findAppointment(const service::FieldParams& 
 	return nullptr;
 }
 
-void Query::loadTasks(const std::shared_ptr<service::RequestState>& state) const
+void Query::loadTasks(const std::shared_ptr<service::RequestState>& state)
 {
-	if (state)
-	{
-		auto todayState = std::static_pointer_cast<RequestState>(state);
-
-		todayState->tasksRequestId = todayState->requestId;
-		todayState->loadTasksCount++;
-	}
-
 	if (_getTasks)
 	{
+		if (state)
+		{
+			auto todayState = std::static_pointer_cast<RequestState>(state);
+
+			todayState->tasksRequestId = todayState->requestId;
+			todayState->loadTasksCount++;
+		}
+
 		_tasks = _getTasks();
 		_getTasks = nullptr;
 	}
 }
 
-std::shared_ptr<Task> Query::findTask(const service::FieldParams& params, const response::IdType& id) const
+std::shared_ptr<Task> Query::findTask(
+	const service::FieldParams& params, const response::IdType& id)
 {
 	loadTasks(params.state);
 
 	for (const auto& task : _tasks)
 	{
-		auto taskId = task->getId(service::FieldParams(params, response::Value(response::Type::Map))).get();
-
-		if (taskId == id)
+		if (task->id() == id)
 		{
 			return task;
 		}
@@ -105,32 +115,31 @@ std::shared_ptr<Task> Query::findTask(const service::FieldParams& params, const 
 	return nullptr;
 }
 
-void Query::loadUnreadCounts(const std::shared_ptr<service::RequestState>& state) const
+void Query::loadUnreadCounts(const std::shared_ptr<service::RequestState>& state)
 {
-	if (state)
-	{
-		auto todayState = std::static_pointer_cast<RequestState>(state);
-
-		todayState->unreadCountsRequestId = todayState->requestId;
-		todayState->loadUnreadCountsCount++;
-	}
-
 	if (_getUnreadCounts)
 	{
+		if (state)
+		{
+			auto todayState = std::static_pointer_cast<RequestState>(state);
+
+			todayState->unreadCountsRequestId = todayState->requestId;
+			todayState->loadUnreadCountsCount++;
+		}
+
 		_unreadCounts = _getUnreadCounts();
 		_getUnreadCounts = nullptr;
 	}
 }
 
-std::shared_ptr<Folder> Query::findUnreadCount(const service::FieldParams& params, const response::IdType& id) const
+std::shared_ptr<Folder> Query::findUnreadCount(
+	const service::FieldParams& params, const response::IdType& id)
 {
 	loadUnreadCounts(params.state);
 
 	for (const auto& folder : _unreadCounts)
 	{
-		auto folderId = folder->getId(service::FieldParams(params, response::Value(response::Type::Map))).get();
-
-		if (folderId == id)
+		if (folder->id() == id)
 		{
 			return folder;
 		}
@@ -139,35 +148,63 @@ std::shared_ptr<Folder> Query::findUnreadCount(const service::FieldParams& param
 	return nullptr;
 }
 
-service::FieldResult<std::shared_ptr<service::Object>> Query::getNode(service::FieldParams&& params, response::IdType&& id) const
+template <class _Rep, class _Period>
+auto operator co_await(std::chrono::duration<_Rep, _Period> delay)
 {
-	std::promise<std::shared_ptr<service::Object>> promise;
+	struct awaiter
+	{
+		const std::chrono::duration<_Rep, _Period> delay;
+
+		constexpr bool await_ready() const
+		{
+			return true;
+		}
+
+		void await_suspend(coro::coroutine_handle<> h) noexcept
+		{
+			h.resume();
+		}
+
+		void await_resume()
+		{
+			std::this_thread::sleep_for(delay);
+		}
+	};
+
+	return awaiter { delay };
+}
+
+service::AwaitableObject<std::shared_ptr<object::Node>> Query::getNode(
+	service::FieldParams params, response::IdType id)
+{
+	// query { node(id: "ZmFrZVRhc2tJZA==") { ...on Task { title } } }
+	using namespace std::literals;
+	co_await 100ms;
+
 	auto appointment = findAppointment(params, id);
 
 	if (appointment)
 	{
-		promise.set_value(appointment);
-		return promise.get_future();
+		co_return std::make_shared<object::Node>(
+			std::make_shared<object::Appointment>(std::move(appointment)));
 	}
 
 	auto task = findTask(params, id);
 
 	if (task)
 	{
-		promise.set_value(task);
-		return promise.get_future();
+		co_return std::make_shared<object::Node>(std::make_shared<object::Task>(std::move(task)));
 	}
 
 	auto folder = findUnreadCount(params, id);
 
 	if (folder)
 	{
-		promise.set_value(folder);
-		return promise.get_future();
+		co_return std::make_shared<object::Node>(
+			std::make_shared<object::Folder>(std::move(folder)));
 	}
 
-	promise.set_value(nullptr);
-	return promise.get_future();
+	co_return nullptr;
 }
 
 template <class _Object, class _Connection>
@@ -176,27 +213,26 @@ struct EdgeConstraints
 	using vec_type = std::vector<std::shared_ptr<_Object>>;
 	using itr_type = typename vec_type::const_iterator;
 
-	EdgeConstraints(const std::shared_ptr<service::RequestState>& state, service::field_path&& path, const vec_type& objects)
+	EdgeConstraints(const std::shared_ptr<service::RequestState>& state, const vec_type& objects)
 		: _state(state)
-		, _path(std::move(path))
 		, _objects(objects)
 	{
 	}
 
-	std::shared_ptr<_Connection> operator()(const std::optional<int>& first, const std::optional<response::Value>& after, const std::optional<int>& last, const std::optional<response::Value>& before) const
+	std::shared_ptr<_Connection> operator()(const std::optional<int>& first,
+		std::optional<response::Value>&& after, const std::optional<int>& last,
+		std::optional<response::Value>&& before) const
 	{
 		auto itrFirst = _objects.cbegin();
 		auto itrLast = _objects.cend();
 
 		if (after)
 		{
-			const auto& encoded = after->get<response::StringType>();
-			auto afterId = service::Base64::fromBase64(encoded.c_str(), encoded.size());
-			auto itrAfter = std::find_if(itrFirst, itrLast,
-				[&afterId](const std::shared_ptr<_Object>& entry)
-			{
-				return entry->id() == afterId;
-			});
+			auto afterId = after->release<response::IdType>();
+			auto itrAfter =
+				std::find_if(itrFirst, itrLast, [&afterId](const std::shared_ptr<_Object>& entry) {
+					return entry->id() == afterId;
+				});
 
 			if (itrAfter != itrLast)
 			{
@@ -206,13 +242,11 @@ struct EdgeConstraints
 
 		if (before)
 		{
-			const auto& encoded = before->get<response::StringType>();
-			auto beforeId = service::Base64::fromBase64(encoded.c_str(), encoded.size());
-			auto itrBefore = std::find_if(itrFirst, itrLast,
-				[&beforeId](const std::shared_ptr<_Object>& entry)
-			{
-				return entry->id() == beforeId;
-			});
+			auto beforeId = before->release<response::IdType>();
+			auto itrBefore =
+				std::find_if(itrFirst, itrLast, [&beforeId](const std::shared_ptr<_Object>& entry) {
+					return entry->id() == beforeId;
+				});
 
 			if (itrBefore != itrLast)
 			{
@@ -228,7 +262,7 @@ struct EdgeConstraints
 				std::ostringstream error;
 
 				error << "Invalid argument: first value: " << *first;
-				throw service::schema_exception { { service::schema_error{ error.str(), {}, _path } } };
+				throw service::schema_exception { { service::schema_error { error.str() } } };
 			}
 
 			if (itrLast - itrFirst > *first)
@@ -244,7 +278,7 @@ struct EdgeConstraints
 				std::ostringstream error;
 
 				error << "Invalid argument: last value: " << *last;
-				throw service::schema_exception { { service::schema_error{ error.str(), {}, _path } } };
+				throw service::schema_exception { { service::schema_error { error.str() } } };
 			}
 
 			if (itrLast - itrFirst > *last)
@@ -257,125 +291,183 @@ struct EdgeConstraints
 
 		std::copy(itrFirst, itrLast, edges.begin());
 
-		return std::make_shared<_Connection>(itrLast < _objects.cend(), itrFirst > _objects.cbegin(), std::move(edges));
+		return std::make_shared<_Connection>(itrLast<_objects.cend(), itrFirst> _objects.cbegin(),
+			std::move(edges));
 	}
 
 private:
 	const std::shared_ptr<service::RequestState>& _state;
-	const service::field_path _path;
 	const vec_type& _objects;
 };
 
-service::FieldResult<std::shared_ptr<object::AppointmentConnection>> Query::getAppointments(service::FieldParams&& params, std::optional<int>&& first, std::optional<response::Value>&& after, std::optional<int>&& last, std::optional<response::Value>&& before) const
+std::future<std::shared_ptr<object::AppointmentConnection>> Query::getAppointments(
+	const service::FieldParams& params, std::optional<int> first,
+	std::optional<response::Value>&& after, std::optional<int> last,
+	std::optional<response::Value>&& before)
 {
 	auto spThis = shared_from_this();
 	auto state = params.state;
-	return std::async(std::launch::async,
-		[this, spThis, state](std::optional<int>&& firstWrapped, std::optional<response::Value>&& afterWrapped, std::optional<int>&& lastWrapped, std::optional<response::Value>&& beforeWrapped, service::field_path&& path)
-	{
-		loadAppointments(state);
+	return std::async(
+		std::launch::async,
+		[this, spThis, state](std::optional<int>&& firstWrapped,
+			std::optional<response::Value>&& afterWrapped,
+			std::optional<int>&& lastWrapped,
+			std::optional<response::Value>&& beforeWrapped) {
+			loadAppointments(state);
 
-		EdgeConstraints<Appointment, AppointmentConnection> constraints(state, std::move(path), _appointments);
-		auto connection = constraints(firstWrapped, afterWrapped, lastWrapped, beforeWrapped);
+			EdgeConstraints<Appointment, AppointmentConnection> constraints(state, _appointments);
+			auto connection = constraints(firstWrapped,
+				std::move(afterWrapped),
+				lastWrapped,
+				std::move(beforeWrapped));
 
-		return std::static_pointer_cast<object::AppointmentConnection>(connection);
-	}, std::move(first), std::move(after), std::move(last), std::move(before), std::move(params.errorPath));
+			return std::make_shared<object::AppointmentConnection>(connection);
+		},
+		std::move(first),
+		std::move(after),
+		std::move(last),
+		std::move(before));
 }
 
-service::FieldResult<std::shared_ptr<object::TaskConnection>> Query::getTasks(service::FieldParams&& params, std::optional<int>&& first, std::optional<response::Value>&& after, std::optional<int>&& last, std::optional<response::Value>&& before) const
+std::future<std::shared_ptr<object::TaskConnection>> Query::getTasks(
+	const service::FieldParams& params, std::optional<int> first,
+	std::optional<response::Value>&& after, std::optional<int> last,
+	std::optional<response::Value>&& before)
 {
 	auto spThis = shared_from_this();
 	auto state = params.state;
-	return std::async(std::launch::async,
-		[this, spThis, state](std::optional<int>&& firstWrapped, std::optional<response::Value>&& afterWrapped, std::optional<int>&& lastWrapped, std::optional<response::Value>&& beforeWrapped, service::field_path&& path)
-	{
-		loadTasks(state);
+	return std::async(
+		std::launch::async,
+		[this, spThis, state](std::optional<int>&& firstWrapped,
+			std::optional<response::Value>&& afterWrapped,
+			std::optional<int>&& lastWrapped,
+			std::optional<response::Value>&& beforeWrapped) {
+			loadTasks(state);
 
-		EdgeConstraints<Task, TaskConnection> constraints(state, std::move(path), _tasks);
-		auto connection = constraints(firstWrapped, afterWrapped, lastWrapped, beforeWrapped);
+			EdgeConstraints<Task, TaskConnection> constraints(state, _tasks);
+			auto connection = constraints(firstWrapped,
+				std::move(afterWrapped),
+				lastWrapped,
+				std::move(beforeWrapped));
 
-		return std::static_pointer_cast<object::TaskConnection>(connection);
-	}, std::move(first), std::move(after), std::move(last), std::move(before), std::move(params.errorPath));
+			return std::make_shared<object::TaskConnection>(connection);
+		},
+		std::move(first),
+		std::move(after),
+		std::move(last),
+		std::move(before));
 }
 
-service::FieldResult<std::shared_ptr<object::FolderConnection>> Query::getUnreadCounts(service::FieldParams&& params, std::optional<int>&& first, std::optional<response::Value>&& after, std::optional<int>&& last, std::optional<response::Value>&& before) const
+std::future<std::shared_ptr<object::FolderConnection>> Query::getUnreadCounts(
+	const service::FieldParams& params, std::optional<int> first,
+	std::optional<response::Value>&& after, std::optional<int> last,
+	std::optional<response::Value>&& before)
 {
 	auto spThis = shared_from_this();
 	auto state = params.state;
-	return std::async(std::launch::async,
-		[this, spThis, state](std::optional<int>&& firstWrapped, std::optional<response::Value>&& afterWrapped, std::optional<int>&& lastWrapped, std::optional<response::Value>&& beforeWrapped, service::field_path&& path)
-	{
-		loadUnreadCounts(state);
+	return std::async(
+		std::launch::async,
+		[this, spThis, state](std::optional<int>&& firstWrapped,
+			std::optional<response::Value>&& afterWrapped,
+			std::optional<int>&& lastWrapped,
+			std::optional<response::Value>&& beforeWrapped) {
+			loadUnreadCounts(state);
 
-		EdgeConstraints<Folder, FolderConnection> constraints(state, std::move(path), _unreadCounts);
-		auto connection = constraints(firstWrapped, afterWrapped, lastWrapped, beforeWrapped);
+			EdgeConstraints<Folder, FolderConnection> constraints(state, _unreadCounts);
+			auto connection = constraints(firstWrapped,
+				std::move(afterWrapped),
+				lastWrapped,
+				std::move(beforeWrapped));
 
-		return std::static_pointer_cast<object::FolderConnection>(connection);
-	}, std::move(first), std::move(after), std::move(last), std::move(before), std::move(params.errorPath));
+			return std::make_shared<object::FolderConnection>(connection);
+		},
+		std::move(first),
+		std::move(after),
+		std::move(last),
+		std::move(before));
 }
 
-service::FieldResult<std::vector<std::shared_ptr<object::Appointment>>> Query::getAppointmentsById(service::FieldParams&& params, std::vector<response::IdType>&& ids) const
+std::vector<std::shared_ptr<object::Appointment>> Query::getAppointmentsById(
+	const service::FieldParams& params, const std::vector<response::IdType>& ids)
 {
-	std::promise<std::vector<std::shared_ptr<object::Appointment>>> promise;
 	std::vector<std::shared_ptr<object::Appointment>> result(ids.size());
 
-	std::transform(ids.cbegin(), ids.cend(), result.begin(),
-		[this, &params](const response::IdType& id)
-	{
-		return std::static_pointer_cast<object::Appointment>(findAppointment(params, id));
-	});
-	promise.set_value(std::move(result));
+	std::transform(ids.cbegin(),
+		ids.cend(),
+		result.begin(),
+		[this, &params](const response::IdType& id) {
+			return std::make_shared<object::Appointment>(findAppointment(params, id));
+		});
 
-	return promise.get_future();
+	return result;
 }
 
-service::FieldResult<std::vector<std::shared_ptr<object::Task>>> Query::getTasksById(service::FieldParams&& params, std::vector<response::IdType>&& ids) const
+std::vector<std::shared_ptr<object::Task>> Query::getTasksById(
+	const service::FieldParams& params, const std::vector<response::IdType>& ids)
 {
-	std::promise<std::vector<std::shared_ptr<object::Task>>> promise;
 	std::vector<std::shared_ptr<object::Task>> result(ids.size());
 
-	std::transform(ids.cbegin(), ids.cend(), result.begin(),
-		[this, &params](const response::IdType& id)
-	{
-		return std::static_pointer_cast<object::Task>(findTask(params, id));
-	});
-	promise.set_value(std::move(result));
+	std::transform(ids.cbegin(),
+		ids.cend(),
+		result.begin(),
+		[this, &params](const response::IdType& id) {
+			return std::make_shared<object::Task>(findTask(params, id));
+		});
 
-	return promise.get_future();
+	return result;
 }
 
-service::FieldResult<std::vector<std::shared_ptr<object::Folder>>> Query::getUnreadCountsById(service::FieldParams&& params, std::vector<response::IdType>&& ids) const
+std::vector<std::shared_ptr<object::Folder>> Query::getUnreadCountsById(
+	const service::FieldParams& params, const std::vector<response::IdType>& ids)
 {
-	std::promise<std::vector<std::shared_ptr<object::Folder>>> promise;
 	std::vector<std::shared_ptr<object::Folder>> result(ids.size());
 
-	std::transform(ids.cbegin(), ids.cend(), result.begin(),
-		[this, &params](const response::IdType& id)
-	{
-		return std::static_pointer_cast<object::Folder>(findUnreadCount(params, id));
-	});
-	promise.set_value(std::move(result));
+	std::transform(ids.cbegin(),
+		ids.cend(),
+		result.begin(),
+		[this, &params](const response::IdType& id) {
+			return std::make_shared<object::Folder>(findUnreadCount(params, id));
+		});
 
-	return promise.get_future();
+	return result;
 }
 
-service::FieldResult<std::shared_ptr<object::NestedType>> Query::getNested(service::FieldParams&& params) const
+std::shared_ptr<object::NestedType> Query::getNested(service::FieldParams&& params)
 {
-	std::promise<std::shared_ptr<object::NestedType>> promise;
-
-	promise.set_value(std::make_shared<NestedType>(std::move(params), 1));
-
-	return promise.get_future();
+	return std::make_shared<object::NestedType>(std::make_shared<NestedType>(std::move(params), 1));
 }
 
-service::FieldResult<std::vector<std::shared_ptr<object::Expensive>>> Query::getExpensive(service::FieldParams&& /*params*/) const
+std::vector<std::shared_ptr<object::Expensive>> Query::getExpensive()
 {
 	std::vector<std::shared_ptr<object::Expensive>> result(Expensive::count);
 
 	for (auto& entry : result)
 	{
-		entry = std::make_shared<Expensive>();
+		entry = std::make_shared<object::Expensive>(std::make_shared<Expensive>());
 	}
+
+	return result;
+}
+
+TaskState Query::getTestTaskState()
+{
+	return TaskState::Unassigned;
+}
+
+std::vector<std::shared_ptr<object::UnionType>> Query::getAnyType(
+	const service::FieldParams& params, const std::vector<response::IdType>&)
+{
+	loadAppointments(params.state);
+
+	std::vector<std::shared_ptr<object::UnionType>> result(_appointments.size());
+
+	std::transform(_appointments.cbegin(),
+		_appointments.cend(),
+		result.begin(),
+		[](const auto& appointment) noexcept {
+			return std::make_shared<object::UnionType>(
+				std::make_shared<object::Appointment>(appointment));
+		});
 
 	return result;
 }
@@ -385,13 +477,23 @@ Mutation::Mutation(completeTaskMutation&& mutateCompleteTask)
 {
 }
 
-service::FieldResult<std::shared_ptr<object::CompleteTaskPayload>> Mutation::applyCompleteTask(service::FieldParams&& params, CompleteTaskInput&& input) const
+std::shared_ptr<object::CompleteTaskPayload> Mutation::applyCompleteTask(
+	CompleteTaskInput&& input) noexcept
 {
-	std::promise<std::shared_ptr<object::CompleteTaskPayload>> promise;
+	return std::make_shared<object::CompleteTaskPayload>(_mutateCompleteTask(std::move(input)));
+}
 
-	promise.set_value(_mutateCompleteTask(std::move(input)));
+std::optional<double> Mutation::_setFloat = std::nullopt;
 
-	return promise.get_future();
+double Mutation::getFloat() noexcept
+{
+	return *_setFloat;
+}
+
+double Mutation::applySetFloat(double valueArg) noexcept
+{
+	_setFloat = std::make_optional(valueArg);
+	return valueArg;
 }
 
 std::stack<CapturedParams> NestedType::_capturedParams;
@@ -399,34 +501,32 @@ std::stack<CapturedParams> NestedType::_capturedParams;
 NestedType::NestedType(service::FieldParams&& params, int depth)
 	: depth(depth)
 {
-	_capturedParams.push({
-		response::Value(params.operationDirectives),
-		response::Value(params.fragmentDefinitionDirectives),
-		response::Value(params.fragmentSpreadDirectives),
-		response::Value(params.inlineFragmentDirectives),
-		std::move(params.fieldDirectives)
-		});
+	_capturedParams.push({ { params.operationDirectives },
+		params.fragmentDefinitionDirectives->empty()
+			? service::Directives {}
+			: service::Directives { params.fragmentDefinitionDirectives->front().get() },
+		params.fragmentSpreadDirectives->empty()
+			? service::Directives {}
+			: service::Directives { params.fragmentSpreadDirectives->front() },
+		params.inlineFragmentDirectives->empty()
+			? service::Directives {}
+			: service::Directives { params.inlineFragmentDirectives->front() },
+		std::move(params.fieldDirectives) });
 }
 
-service::FieldResult<response::IntType> NestedType::getDepth(service::FieldParams&& params) const
+int NestedType::getDepth() const noexcept
 {
-	std::promise<response::IntType> promise;
-
-	promise.set_value(depth);
-
-	return promise.get_future();
+	return depth;
 }
 
-service::FieldResult<std::shared_ptr<object::NestedType>> NestedType::getNested(service::FieldParams&& params) const
+std::shared_ptr<object::NestedType> NestedType::getNested(
+	service::FieldParams&& params) const noexcept
 {
-	std::promise<std::shared_ptr<object::NestedType>> promise;
-
-	promise.set_value(std::make_shared<NestedType>(std::move(params), depth + 1));
-
-	return promise.get_future();
+	return std::make_shared<object::NestedType>(
+		std::make_shared<NestedType>(std::move(params), depth + 1));
 }
 
-std::stack<CapturedParams> NestedType::getCapturedParams()
+std::stack<CapturedParams> NestedType::getCapturedParams() noexcept
 {
 	auto result = std::move(_capturedParams);
 
@@ -460,31 +560,37 @@ Expensive::~Expensive()
 	--instances;
 }
 
-service::FieldResult<response::IntType> Expensive::getOrder(service::FieldParams&& params) const
+std::future<int> Expensive::getOrder(const service::FieldParams& params) const noexcept
 {
-	return std::async(params.launch,
-		[](bool blockAsync, response::IntType instanceOrder) noexcept
-	{
-		if (blockAsync)
-		{
-			// Block all of the Expensive objects in async mode until the count is reached.
-			std::unique_lock pendingExpensiveLock(pendingExpensiveMutex);
-
-			if (++pendingExpensive < count)
+	return std::async(
+		params.launch.await_ready() ? std::launch::deferred : std::launch::async,
+		[](bool blockAsync, int instanceOrder) noexcept {
+			if (blockAsync)
 			{
-				pendingExpensiveCondition.wait(pendingExpensiveLock, []()
+				// Block all of the Expensive objects in async mode until the count is reached.
+				std::unique_lock pendingExpensiveLock(pendingExpensiveMutex);
+
+				if (++pendingExpensive < count)
 				{
-					return pendingExpensive == count;
-				});
+					pendingExpensiveCondition.wait(pendingExpensiveLock, []() {
+						return pendingExpensive == count;
+					});
+				}
+
+				// Wake up the next Expensive object.
+				pendingExpensiveLock.unlock();
+				pendingExpensiveCondition.notify_one();
 			}
 
-			// Wake up the next Expensive object.
-			pendingExpensiveLock.unlock();
-			pendingExpensiveCondition.notify_one();
-		}
-
-		return instanceOrder;
-	}, params.launch == std::launch::async, static_cast<response::IntType>(order));
+			return instanceOrder;
+		},
+		!params.launch.await_ready(),
+		static_cast<int>(order));
 }
 
-} /* namespace graphql::today */
+EmptyOperations::EmptyOperations()
+	: service::Request({}, GetSchema())
+{
+}
+
+} // namespace graphql::today
