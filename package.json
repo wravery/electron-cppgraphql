@@ -7,10 +7,6 @@
     "test"
   ],
   "main": "lib/index.js",
-  "directories": {
-    "lib": "lib",
-    "bin": "build/Release"
-  },
   "scripts": {
     "debug": "cmake-js build -D && cross-env USE_DEBUG_MODULE=1 node --inspect-brk ./node_modules/jest/bin/jest.js --runInBand",
     "prepare": "cmake-js build",
@@ -24,6 +20,7 @@
     "arch": "x64"
   },
   "dependencies": {
+    "bindings": "1.5.0",
     "cmake-js": "^6.1.0",
     "cross-env": "7.0.3",
     "electron": "~11.5.0",

@@ -1,9 +1,8 @@
 describe("GraphQL native module tests", () => {
-  const graphql = require(`./build/${
-    process.env.USE_DEBUG_MODULE ? "Debug" : "Release"
-  }/electron-cppgraphql`);
+  const graphql = require("bindings")("electron-cppgraphql.node");
 
   it("starts the service", () => {
+    expect(graphql).not.toBeNull();
     graphql.startService();
   });
 
