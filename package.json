@@ -23,7 +23,7 @@
     "bindings": "1.5.0",
     "cmake-js": "^6.1.0",
     "cross-env": "7.0.3",
-    "electron": "~13.6.6",
+    "electron": "~18.3.7",
     "nan": "^2.14.0"
   },
   "devDependencies": {
